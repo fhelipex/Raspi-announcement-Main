@@ -1,0 +1,12 @@
+{
+  "node_name": "Aura Node",
+  "port": 5000,
+  "peer_url": "http://localhost:5001",
+  "tts_engine": "pyttsx3",
+  "volume": 1.0,
+  "speed": 150,
+  "offline_fallback": true,
+  "mic_enabled": true,
+  "mic_energy_threshold": 300,
+  "mic_phrase_limit": 8
+}

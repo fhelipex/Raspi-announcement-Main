@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WiFi Announcement System Dashboard</title>
+    
+    <!-- Modern Premium Typography -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;600;800&display=swap" rel="stylesheet">
+    
+    <!-- Styling Sheet -->
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+    <div class="stars-bg"></div>
+    <div class="app-container">
+        
+        <!-- Header -->
+        <header class="glass-panel header-bar">
+            <div class="logo-area">
+                <div class="pulse-indicator glow-purple"></div>
+                <h1>AURA <span>Announcements</span></h1>
+            </div>
+            
+            <div class="system-time" id="system-clock">12:00:00 PM</div>
+            
+            <div class="nodes-status">
+                <div class="node-badge" id="vtt-node">
+                    <span class="indicator-dot offline" id="vtt-dot"></span>
+                    <span class="node-label">Client (VTT-1)</span>
+                </div>
+                <div class="node-badge" id="tts-node">
+                    <span class="indicator-dot online"></span>
+                    <span class="node-label">Server (TTS-2)</span>
+                </div>
+            </div>
+        </header>
+
+        <!-- Main Content Grid -->
+        <main class="dashboard-grid">
+            
+            <!-- Left Side: Control & Configuration -->
+            <section class="grid-column">
+                
+                <!-- Quick Broadcast Card -->
+                <div class="glass-panel card animate-in" id="broadcast-panel">
+                    <div class="card-header">
+                        <h2>New Broadcast</h2>
+                        <span class="sub-heading">Send announcement to Speakers</span>
+                    </div>
+                    
+                    <div class="card-body">
+                        <div class="input-group">
+                            <label for="announcement-text">Announcement Text</label>
+                            <textarea id="announcement-text" placeholder="Type an announcement to broadcast..." rows="4"></textarea>
+                        </div>
+
+                        <div class="settings-row">
+                            <div class="input-group">
+                                <label for="engine-selector">Voice Engine</label>
+                                <select id="engine-selector">
+                                    <option value="gtts">Google TTS (Natural Cloud)</option>
+                                    <option value="pyttsx3">pyttsx3 (Local Offline)</option>
+                                    <option value="espeak">espeak (Linux Default)</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="sliders-container">
+                            <div class="slider-group">
+                                <div class="slider-header">
+                                    <label for="volume-slider">Volume</label>
+                                    <span class="slider-value" id="volume-val">100%</span>
+                                </div>
+                                <input type="range" id="volume-slider" min="0" max="1" step="0.05" value="1">
+                            </div>
+
+                            <div class="slider-group">
+                                <div class="slider-header">
+                                    <label for="speed-slider">Speed (WPM)</label>
+                                    <span class="slider-value" id="speed-val">150</span>
+                                </div>
+                                <input type="range" id="speed-slider" min="80" max="220" step="5" value="150">
+                            </div>
+                        </div>
+
+                        <button id="btn-broadcast" class="btn-primary">
+                            <span class="btn-text">Broadcast Announcement</span>
+                            <span class="glow-effect"></span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Global Settings Card -->
+                <div class="glass-panel card animate-in" style="animation-delay: 0.1s;">
+                    <div class="card-header">
+                        <h2>System Preferences</h2>
+                        <span class="sub-heading">Global engine defaults</span>
+                    </div>
+                    <div class="card-body settings-card-body">
+                        <div class="toggle-group">
+                            <div class="toggle-info">
+                                <span class="toggle-title">Offline Fallback</span>
+                                <span class="toggle-desc">Switch to offline engine if Cloud TTS fails</span>
+                            </div>
+                            <label class="switch">
+                                <input type="checkbox" id="setting-fallback" checked>
+                                <span class="slider-toggle"></span>
+                            </label>
+                        </div>
+                        <button id="btn-clear-logs" class="btn-secondary">Clear Logs History</button>
+                    </div>
+                </div>
+
+            </section>
+
+            <!-- Right Side: Telemetry & Broadcast Feed -->
+            <section class="grid-column">
+                
+                <!-- Telemetry Metrics Card -->
+                <div class="glass-panel card animate-in" style="animation-delay: 0.15s;">
+                    <div class="card-header">
+                        <h2>Node Telemetry</h2>
+                        <span class="sub-heading">Live system diagnostics</span>
+                    </div>
+                    <div class="card-body metrics-grid">
+                        <div class="metric-card">
+                            <div class="metric-value" id="stat-uptime">0s</div>
+                            <div class="metric-label">Server Uptime</div>
+                        </div>
+                        
+                        <div class="metric-card">
+                            <div class="metric-value" id="stat-queue">0</div>
+                            <div class="metric-label">Queue Length</div>
+                        </div>
+
+                        <div class="metric-card progress-card">
+                            <div class="progress-info">
+                                <span class="metric-label">Server CPU</span>
+                                <span class="progress-val" id="stat-cpu">0%</span>
+                            </div>
+                            <div class="progress-bar-container">
+                                <div class="progress-bar" id="cpu-bar" style="width: 0%"></div>
+                            </div>
+                        </div>
+
+                        <div class="metric-card progress-card">
+                            <div class="progress-info">
+                                <span class="metric-label">Server Memory</span>
+                                <span class="progress-val" id="stat-mem">0%</span>
+                            </div>
+                            <div class="progress-bar-container">
+                                <div class="progress-bar" id="mem-bar" style="width: 0%"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Live Broadcast Logs Card -->
+                <div class="glass-panel card flex-grow animate-in" style="animation-delay: 0.2s;" id="logs-panel">
+                    <div class="card-header logs-header">
+                        <div>
+                            <h2>Announcement Feed</h2>
+                            <span class="sub-heading">Real-time transcripts & speech status</span>
+                        </div>
+                        <span class="badge" id="logs-count">0 Announcements</span>
+                    </div>
+                    
+                    <div class="card-body logs-container" id="logs-feed">
+                        <!-- Simulated or real announcement logs will append here dynamically -->
+                        <div class="empty-state" id="empty-logs-state">
+                            <div class="empty-icon">📢</div>
+                            <p>No announcements logged yet.</p>
+                            <span>Transmit from Raspi 1 or enter a manual message above.</span>
+                        </div>
+                    </div>
+                </div>
+
+            </section>
+        </main>
+    </div>
+
+    <script src="/static/app.js"></script>
+</body>
+</html>

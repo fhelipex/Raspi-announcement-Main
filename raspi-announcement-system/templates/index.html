@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Aura Intercom — {{ node_name }}</title>
+  <meta name="description" content="Aura 2-Way WiFi Intercom — Broadcast voice announcements between nodes over a local network." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="/static/style.css" />
+</head>
+<body>
+
+<!-- ─── Header ─────────────────────────────────────────────────── -->
+<header class="header">
+  <div class="header-inner">
+    <div class="logo">
+      <span class="logo-icon">📡</span>
+      <div>
+        <div class="logo-title">Aura Intercom</div>
+        <div class="logo-sub" id="node-name-label">{{ node_name }} · Port {{ port }}</div>
+      </div>
+    </div>
+    <div class="header-right">
+      <div class="peer-badge" id="peer-badge">
+        <span class="peer-dot" id="peer-dot"></span>
+        <span id="peer-badge-label">Connecting…</span>
+      </div>
+      <div class="clock" id="clock">--:--:--</div>
+    </div>
+  </div>
+</header>
+
+<!-- ─── Main Layout ─────────────────────────────────────────────── -->
+<main class="main-grid">
+
+  <!-- ══ LEFT COLUMN ══ -->
+  <div class="col-left">
+
+    <!-- Intercom Card -->
+    <section class="card intercom-card" id="intercom-section">
+      <div class="card-header">
+        <h2 class="card-title"><span>🎙️</span> Intercom</h2>
+        <div class="engine-pill" id="engine-pill">pyttsx3</div>
+      </div>
+
+      <!-- Mode Selector Segmented Control -->
+      <div class="mode-selector-container">
+        <div class="mode-selector">
+          <button class="mode-btn active" data-mode="transmitting" id="mode-btn-transmitting">
+            <span class="mode-btn-icon">📤</span> Transmit Mode
+          </button>
+          <button class="mode-btn" data-mode="listening" id="mode-btn-listening">
+            <span class="mode-btn-icon">📥</span> Listen Mode
+          </button>
+        </div>
+      </div>
+
+      <!-- Listen Mode Alert Banner -->
+      <div id="listen-mode-banner" class="listen-banner" style="display: none;">
+        <span>🔇 Listen-Only Mode Active. Microphone and outgoing broadcasts are disabled.</span>
+      </div>
+
+      <!-- Insecure Connection Notice -->
+      <div id="insecure-context-banner" class="insecure-banner" style="display: none;">
+        <span>⚠️ Browser mic blocked over HTTP local network.</span>
+        <button id="insecure-help-btn" class="insecure-help-btn">Setup Mic Help</button>
+      </div>
+
+      <!-- Mic Button -->
+      <div class="mic-area">
+        <button id="mic-btn" class="mic-btn" title="Hold to talk">
+          <svg class="mic-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/>
+            <path d="M19 10v2a7 7 0 0 1-14 0v-2"/>
+            <line x1="12" y1="19" x2="12" y2="23"/>
+            <line x1="8" y1="23" x2="16" y2="23"/>
+          </svg>
+          <div class="mic-waves" id="mic-waves">
+            <span></span><span></span><span></span><span></span><span></span>
+          </div>
+        </button>
+        <div class="mic-hint" id="mic-hint">Click to start recording</div>
+      </div>
+
+      <!-- Live transcript -->
+      <div class="transcript-box" id="transcript-box">
+        <div class="transcript-placeholder" id="transcript-placeholder">Your spoken words will appear here…</div>
+        <div class="transcript-text" id="transcript-text"></div>
+      </div>
+
+      <!-- Text input (manual override) -->
+      <div class="text-input-row">
+        <textarea id="broadcast-text" class="broadcast-textarea"
+                  placeholder="Or type a message to broadcast…" rows="2"></textarea>
+      </div>
+
+      <!-- Target selector -->
+      <div class="target-selector" id="target-selector">
+        <button class="target-btn active" data-target="both"   id="target-both">📡 Both Nodes</button>
+        <button class="target-btn"        data-target="local"  id="target-local">🖥️ Local Only</button>
+        <button class="target-btn"        data-target="peer"   id="target-peer">📶 Peer Only</button>
+      </div>
+
+      <!-- Send button -->
+      <button class="send-btn" id="send-btn">
+        <span class="send-btn-icon">▶</span>
+        <span>Broadcast</span>
+      </button>
+
+      <!-- Send feedback -->
+      <div class="send-feedback" id="send-feedback"></div>
+    </section>
+
+    <!-- Settings Card -->
+    <section class="card settings-card">
+      <div class="card-header">
+        <h2 class="card-title"><span>⚙️</span> Settings</h2>
+      </div>
+      <div class="settings-grid">
+        <div class="setting-group">
+          <label for="sel-engine">TTS Engine</label>
+          <select id="sel-engine" class="setting-select">
+            <option value="pyttsx3">pyttsx3 (offline)</option>
+            <option value="gtts">Google TTS (online)</option>
+            <option value="espeak">eSpeak (Linux)</option>
+          </select>
+        </div>
+        <div class="setting-group">
+          <label for="rng-volume">Volume <span id="vol-val">100%</span></label>
+          <input type="range" id="rng-volume" class="setting-range" min="0" max="1" step="0.05" value="1" />
+        </div>
+        <div class="setting-group">
+          <label for="rng-speed">Speed <span id="spd-val">150 wpm</span></label>
+          <input type="range" id="rng-speed" class="setting-range" min="80" max="300" step="10" value="150" />
+        </div>
+        <div class="setting-group toggle-group">
+          <label>Offline Fallback</label>
+          <label class="toggle">
+            <input type="checkbox" id="chk-fallback" checked />
+            <span class="toggle-slider"></span>
+          </label>
+        </div>
+      </div>
+      <button class="apply-btn" id="apply-settings-btn">Apply Settings</button>
+    </section>
+
+  </div><!-- /col-left -->
+
+  <!-- ══ RIGHT COLUMN ══ -->
+  <div class="col-right">
+
+    <!-- Node Telemetry -->
+    <section class="card telemetry-card">
+      <div class="card-header">
+        <h2 class="card-title"><span>📊</span> Node Telemetry</h2>
+        <div class="live-dot-wrap"><span class="live-dot"></span> LIVE</div>
+      </div>
+      <div class="telem-grid">
+        <div class="telem-stat">
+          <div class="telem-label">Uptime</div>
+          <div class="telem-value" id="telem-uptime">—</div>
+        </div>
+        <div class="telem-stat">
+          <div class="telem-label">Queue</div>
+          <div class="telem-value" id="telem-queue">0</div>
+        </div>
+        <div class="telem-stat">
+          <div class="telem-label">CPU</div>
+          <div class="telem-value" id="telem-cpu">—</div>
+        </div>
+        <div class="telem-stat">
+          <div class="telem-label">Memory</div>
+          <div class="telem-value" id="telem-mem">—</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Peer Status Card -->
+    <section class="card peer-card">
+      <div class="card-header">
+        <h2 class="card-title"><span>🔗</span> Peer Node</h2>
+        <div class="peer-latency-badge" id="peer-latency-badge">—</div>
+      </div>
+      <div class="peer-details">
+        <div class="peer-row">
+          <span class="peer-row-label">Status</span>
+          <span class="peer-row-value" id="pd-status">—</span>
+        </div>
+        <div class="peer-row">
+          <span class="peer-row-label">Name</span>
+          <span class="peer-row-value" id="pd-name">—</span>
+        </div>
+        <div class="peer-row">
+          <span class="peer-row-label">URL</span>
+          <span class="peer-row-value peer-url-val" id="pd-url">{{ peer_url }}</span>
+        </div>
+        <div class="peer-row">
+          <span class="peer-row-label">Last Seen</span>
+          <span class="peer-row-value" id="pd-lastseen">—</span>
+        </div>
+        <div class="peer-row">
+          <span class="peer-row-label">Peer Uptime</span>
+          <span class="peer-row-value" id="pd-uptime">—</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- Activity Log -->
+    <section class="card log-card">
+      <div class="card-header">
+        <h2 class="card-title"><span>📋</span> Activity Log</h2>
+        <button class="clear-log-btn" id="clear-log-btn">Clear</button>
+      </div>
+      <div class="log-list" id="log-list">
+        <div class="log-empty">No announcements yet.</div>
+      </div>
+    </section>
+
+  </div><!-- /col-right -->
+
+</main>
+
+<!-- Setup Help Modal -->
+<div id="setup-modal" class="modal" style="display: none;">
+  <div class="modal-content">
+    <div class="modal-header">
+      <h3 class="modal-title">🎙️ Enabling Microphone on Local Network</h3>
+      <button class="modal-close" id="modal-close-btn">&times;</button>
+    </div>
+    <div class="modal-body">
+      <p>Modern browsers block microphone access on insecure connections (like `http://192.168.x.x`). You can bypass this by instructing your browser to treat this local address as secure.</p>
+      
+      <h4 style="margin-top: 15px; color: var(--accent);">For Google Chrome & Microsoft Edge:</h4>
+      <ol style="margin-left: 20px; line-height: 1.6; margin-top: 8px;">
+        <li style="margin-bottom: 8px;">Open a new tab in your browser and enter:<br><code class="code-block" style="display:inline-block; padding: 4px 8px; background: rgba(0,0,0,0.25); border-radius: 4px; border: 1px solid var(--border); font-family: monospace; word-break: break-all; margin: 5px 0; font-size: 0.8em;">chrome://flags/#unsafely-treat-insecure-origin-as-secure</code> (Chrome)<br>or<br><code class="code-block" style="display:inline-block; padding: 4px 8px; background: rgba(0,0,0,0.25); border-radius: 4px; border: 1px solid var(--border); font-family: monospace; word-break: break-all; margin: 5px 0; font-size: 0.8em;">edge://flags/#unsafely-treat-insecure-origin-as-secure</code> (Edge)</li>
+        <li style="margin-bottom: 8px;">Locate the flag: <strong>"Insecure origins treated as secure"</strong>.</li>
+        <li style="margin-bottom: 8px;">Set the dropdown option to <strong>Enabled</strong>.</li>
+        <li style="margin-bottom: 8px;">In the text area provided, paste the URL of this node:<br><code class="code-block" style="display:inline-block; padding: 4px 8px; background: rgba(0,0,0,0.25); border-radius: 4px; border: 1px solid var(--border); font-family: monospace; margin: 5px 0; font-size: 0.85em;" id="insecure-url-code">http://YOUR-IP:PORT</code></li>
+        <li style="margin-bottom: 8px;">If configuring the other node, you can add its URL as well (separated by a comma).</li>
+        <li style="margin-bottom: 8px;">Click <strong>Relaunch</strong> at the bottom right of the browser.</li>
+      </ol>
+      <p style="margin-top: 15px; font-size: 0.82em; opacity: 0.85; border-top: 1px solid var(--border); padding-top: 10px;">Once relaunched, you will be able to grant microphone permissions normally and use the intercom over your WiFi network!</p>
+    </div>
+  </div>
+</div>
+
+<!-- ─── Toast ──────────────────────────────────────────────────── -->
+<div class="toast-container" id="toast-container"></div>
+
+<script>
+  // Pass Flask template vars into JS
+  window.AURA_CONFIG = {
+    nodeName: "{{ node_name }}",
+    port: {{ port }},
+    peerUrl: "{{ peer_url }}"
+  };
+</script>
+<script src="/static/app.js"></script>
+</body>
+</html>
